@@ -1,0 +1,50 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "rgLocation": {
+            "type": "string"
+        },
+        "resourceGroup": {
+            "type": "string"
+        },
+        "automationAccountName": {
+            "type": "string"
+        },
+        "automationAccountSKU": {
+            "type": "string"
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "name": "automationAccount",
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Automation/automationAccounts",
+                            "apiVersion": "2017-05-15-preview",
+                            "location": "[parameters('rgLocation')]",
+                            "name": "[parameters('automationAccountName')]",
+                            "properties": {
+                                "sku": {
+                                    "name": "[parameters('automationAccountSKU')]"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

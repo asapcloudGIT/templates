@@ -1,0 +1,89 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "automationAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "Automation account name"
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Specifies the location in which to create the workspace."
+            }
+        },
+        "logAnalyticsWorkspaceName": {
+            "type": "string",
+            "metadata": {
+                "description": "Workspace name"
+            }
+        },
+        "resourceGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "name of the resource group"
+            }
+        }
+    },
+	"variables": {
+    "Updates": {
+        "name": "[concat('Updates', '(', parameters('logAnalyticsWorkspaceName'), ')')]",
+        "galleryName": "Updates"
+      }
+    },
+    "resources":[
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "resourceGroup": "[parameters('resourceGroupName')]",
+            "name": "automationAccount",
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "resources": [
+                        {
+                            "apiVersion": "2015-11-01-preview",
+                            "location": "[parameters('location')]",
+                            "name": "[variables('Updates').name]",
+                            "type": "Microsoft.OperationsManagement/solutions",
+                            "id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.OperationsManagement/solutions/', variables('Updates').name)]",
+                            "dependsOn": [
+                                "[concat('Microsoft.OperationalInsights/workspaces/', parameters('logAnalyticsWorkspaceName'))]"
+                            ],
+                            "properties": {
+                                "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('logAnalyticsWorkspaceName'))]"
+                            },
+                            "plan": {
+                                "name": "[variables('Updates').name]",
+                                "publisher": "Microsoft",
+                                "promotionCode": "",
+                                "product": "[concat('OMSGallery/', variables('Updates').galleryName)]"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.OperationalInsights/workspaces/linkedServices",
+                            "apiVersion": "2020-03-01-preview",
+                            "name": "[concat(parameters('logAnalyticsWorkspaceName'), '/' , 'Automation')]",
+                            "location": "[parameters('location')]",
+                            "dependsOn": [
+                                "[parameters('logAnalyticsWorkspaceName')]",
+                                "[parameters('automationAccountName')]"
+                            ],
+                            "properties": {
+                                "resourceId": "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+
+}

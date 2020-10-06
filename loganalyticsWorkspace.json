@@ -1,0 +1,301 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "rgLocation": {
+            "type": "string"
+        },
+        "resourceGroup": {
+            "type": "string"
+        },
+        "logAnalyticsWorkspaceName": {
+            "type": "string"
+        },
+        "logAnalyticsWorkspaceSku": {
+            "type": "string"
+        },
+        "logAnalyticsWorkspaceRetention": {
+            "type": "int"
+        },
+        "automationAccountName": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "SubscriptionId": "[subscription().subscriptionId]",
+        "subscription": "[concat('/subscriptions/',variables('SubscriptionId'),'/resourceGroups/')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "logAnalyticsWorkspace",
+            "resourceGroup": "[parameters('resourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                    },
+                    "resources": [
+                        {
+                            "type": "microsoft.operationalinsights/workspaces",
+                            "apiVersion": "2015-11-01-preview",
+                            "name": "[parameters('logAnalyticsWorkspaceName')]",
+                            "location": "[parameters('rgLocation')]",
+                            "properties": {
+                                "sku": {
+                                    "name": "[parameters('logAnalyticsWorkspaceSku')]"
+                                },
+                                "retentionInDays": "[parameters('logAnalyticsWorkspaceRetention')]"
+                            }
+                        },
+                        {
+                            "type": "microsoft.operationalinsights/workspaces/linkedservices",
+                            "apiVersion": "2015-11-01-preview",
+                            "name": "[concat(parameters('logAnalyticsWorkspaceName'), '/automation')]",
+                            "dependsOn": [
+                                "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+                            ],
+                            "properties": {
+                                "resourceId": "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.Automation/automationAccounts/',parameters('automationAccountName'))]"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.OperationsManagement/solutions",
+                            "apiVersion": "2015-11-01-preview",
+                            "name": "[concat('Updates(',parameters('logAnalyticsWorkspaceName'),')')]",
+                            "dependsOn": [
+                                "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+                            ],
+                            "location": "[parameters('rgLocation')]",
+                            "plan": {
+                                "name": "[concat('Updates(',parameters('logAnalyticsWorkspaceName'),')')]",
+                                "promotionCode": "",
+                                "product": "OMSGallery/Updates",
+                                "publisher": "Microsoft"
+                            },
+                            "properties": {
+                                "workspaceResourceId": "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'))]",
+                                "containedResources": [
+                                    "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'), '/views/', 'Updates(',parameters('logAnalyticsWorkspaceName'),')')]"
+                                ]
+                            }
+                        },
+                        {
+                            "type": "Microsoft.OperationsManagement/solutions",
+                            "apiVersion": "2015-11-01-preview",
+                            "name": "[concat('ADAssessment(',parameters('logAnalyticsWorkspaceName'),')')]",
+                            "dependsOn": [
+                                "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+                            ],
+                            "location": "[parameters('rgLocation')]",
+                            "plan": {
+                                "name": "[concat('ADAssessment(',parameters('logAnalyticsWorkspaceName'),')')]",
+                                "promotionCode": "",
+                                "product": "OMSGallery/ADAssessment",
+                                "publisher": "Microsoft"
+                            },
+                            "properties": {
+                                "workspaceResourceId": "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'))]",
+                                "containedResources": [
+                                    "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'), '/views/', 'ADAssessment(',parameters('logAnalyticsWorkspaceName'),')')]"
+                                ]
+                            }
+                        },
+                        {
+                            "type": "Microsoft.OperationsManagement/solutions",
+                            "apiVersion": "2015-11-01-preview",
+                            "name": "[concat('ADReplication(',parameters('logAnalyticsWorkspaceName'),')')]",
+                            "dependsOn": [
+                                "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+                            ],
+                            "location": "[parameters('rgLocation')]",
+                            "plan": {
+                                "name": "[concat('ADReplication(',parameters('logAnalyticsWorkspaceName'),')')]",
+                                "promotionCode": "",
+                                "product": "OMSGallery/ADReplication",
+                                "publisher": "Microsoft"
+                            },
+                            "properties": {
+                                "workspaceResourceId": "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'))]",
+                                "containedResources": [
+                                    "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'), '/views/', 'ADReplication(',parameters('logAnalyticsWorkspaceName'),')')]"
+                                ]
+                            }
+                        },
+                        {
+                            "type": "Microsoft.OperationsManagement/solutions",
+                            "apiVersion": "2015-11-01-preview",
+                            "name": "[concat('AgentHealthAssessment(',parameters('logAnalyticsWorkspaceName'),')')]",
+                            "dependsOn": [
+                                "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+                            ],
+                            "location": "[parameters('rgLocation')]",
+                            "plan": {
+                                "name": "[concat('AgentHealthAssessment(',parameters('logAnalyticsWorkspaceName'),')')]",
+                                "promotionCode": "",
+                                "product": "OMSGallery/AgentHealthAssessment",
+                                "publisher": "Microsoft"
+                            },
+                            "properties": {
+                                "workspaceResourceId": "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'))]",
+                                "containedResources": [
+                                    "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'), '/views/', 'AgentHealthAssessment(',parameters('logAnalyticsWorkspaceName'),')')]"
+                                ]
+                            }
+                        },
+                        {
+                            "type": "Microsoft.OperationsManagement/solutions",
+                            "apiVersion": "2015-11-01-preview",
+                            "name": "[concat('AntiMalware(',parameters('logAnalyticsWorkspaceName'),')')]",
+                            "dependsOn": [
+                                "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+                            ],
+                            "location": "[parameters('rgLocation')]",
+                            "plan": {
+                                "name": "[concat('AntiMalware(',parameters('logAnalyticsWorkspaceName'),')')]",
+                                "promotionCode": "",
+                                "product": "OMSGallery/AntiMalware",
+                                "publisher": "Microsoft"
+                            },
+                            "properties": {
+                                "workspaceResourceId": "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'))]",
+                                "containedResources": [
+                                    "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'), '/views/', 'AntiMalware(',parameters('logAnalyticsWorkspaceName'),')')]"
+                                ]
+                            }
+                        },
+                        {
+                            "type": "Microsoft.OperationsManagement/solutions",
+                            "apiVersion": "2015-11-01-preview",
+                            "name": "[concat('AzureAutomation(',parameters('logAnalyticsWorkspaceName'),')')]",
+                            "dependsOn": [
+                                "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+                            ],
+                            "location": "[parameters('rgLocation')]",
+                            "plan": {
+                                "name": "[concat('AzureAutomation(',parameters('logAnalyticsWorkspaceName'),')')]",
+                                "promotionCode": "",
+                                "product": "OMSGallery/AzureAutomation",
+                                "publisher": "Microsoft"
+                            },
+                            "properties": {
+                                "workspaceResourceId": "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'))]",
+                                "containedResources": [
+                                    "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'), '/views/', 'AzureAutomation(',parameters('logAnalyticsWorkspaceName'),')')]"
+                                ]
+                            }
+                        },
+                        {
+                            "type": "Microsoft.OperationsManagement/solutions",
+                            "apiVersion": "2015-11-01-preview",
+                            "name": "[concat('ChangeTracking(',parameters('logAnalyticsWorkspaceName'),')')]",
+                            "dependsOn": [
+                                "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+                            ],
+                            "location": "[parameters('rgLocation')]",
+                            "plan": {
+                                "name": "[concat('ChangeTracking(',parameters('logAnalyticsWorkspaceName'),')')]",
+                                "promotionCode": "",
+                                "product": "OMSGallery/ChangeTracking",
+                                "publisher": "Microsoft"
+                            },
+                            "properties": {
+                                "workspaceResourceId": "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'))]",
+                                "containedResources": [
+                                    "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'), '/views/', 'ChangeTracking(',parameters('logAnalyticsWorkspaceName'),')')]"
+                                ]
+                            }
+                        },
+                        {
+                            "type": "Microsoft.OperationsManagement/solutions",
+                            "apiVersion": "2015-11-01-preview",
+                            "name": "[concat('LogicAppsManagement(',parameters('logAnalyticsWorkspaceName'),')')]",
+                            "dependsOn": [
+                                "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+                            ],
+                            "location": "[parameters('rgLocation')]",
+                            "plan": {
+                                "name": "[concat('LogicAppsManagement(',parameters('logAnalyticsWorkspaceName'),')')]",
+                                "promotionCode": "",
+                                "product": "OMSGallery/LogicAppsManagement",
+                                "publisher": "Microsoft"
+                            },
+                            "properties": {
+                                "workspaceResourceId": "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'))]",
+                                "containedResources": [
+                                    "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'), '/views/', 'LogicAppsManagement(',parameters('logAnalyticsWorkspaceName'),')')]"
+                                ]
+                            }
+                        },
+                        {
+                            "type": "Microsoft.OperationsManagement/solutions",
+                            "apiVersion": "2015-11-01-preview",
+                            "name": "[concat('VMInsights(',parameters('logAnalyticsWorkspaceName'),')')]",
+                            "dependsOn": [
+                                "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+                            ],
+                            "location": "[parameters('rgLocation')]",
+                            "plan": {
+                                "name": "[concat('VMInsights(',parameters('logAnalyticsWorkspaceName'),')')]",
+                                "promotionCode": "",
+                                "product": "OMSGallery/VMInsights",
+                                "publisher": "Microsoft"
+                            },
+                            "properties": {
+                                "workspaceResourceId": "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'))]",
+                                "containedResources": [
+                                    "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'), '/views/', 'VMInsights(',parameters('logAnalyticsWorkspaceName'),')')]"
+                                ]
+                            }
+                        },
+                        {
+                            "type": "Microsoft.OperationsManagement/solutions",
+                            "apiVersion": "2015-11-01-preview",
+                            "name": "[concat('SQLAssessment(',parameters('logAnalyticsWorkspaceName'),')')]",
+                            "dependsOn": [
+                                "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+                            ],
+                            "location": "[parameters('rgLocation')]",
+                            "plan": {
+                                "name": "[concat('SQLAssessment(',parameters('logAnalyticsWorkspaceName'),')')]",
+                                "promotionCode": "",
+                                "product": "OMSGallery/SQLAssessment",
+                                "publisher": "Microsoft"
+                            },
+                            "properties": {
+                                "workspaceResourceId": "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'))]",
+                                "containedResources": [
+                                    "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'), '/views/', 'VMInsights(',parameters('logAnalyticsWorkspaceName'),')')]"
+                                ]
+                            }
+                        },
+                        {
+                            "type": "Microsoft.OperationsManagement/solutions",
+                            "apiVersion": "2015-11-01-preview",
+                            "name": "[concat('NetworkMonitoring(',parameters('logAnalyticsWorkspaceName'),')')]",
+                            "dependsOn": [
+                                "[resourceId('microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+                            ],
+                            "location": "[parameters('rgLocation')]",
+                            "plan": {
+                                "name": "[concat('NetworkMonitoring(',parameters('logAnalyticsWorkspaceName'),')')]",
+                                "promotionCode": "",
+                                "product": "OMSGallery/NetworkMonitoring",
+                                "publisher": "Microsoft"
+                            },
+                            "properties": {
+                                "workspaceResourceId": "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'))]",
+                                "containedResources": [
+                                    "[concat(variables('subscription'),parameters('resourceGroup'),'/providers/Microsoft.OperationalInsights/workspaces/',parameters('logAnalyticsWorkspaceName'), '/views/', 'VMInsights(',parameters('logAnalyticsWorkspaceName'),')')]"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
